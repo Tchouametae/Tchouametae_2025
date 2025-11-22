@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคาดการณ์ผู้ติดเชื้อโควิด-19 ปี 2022</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🦠 คาดการณ์ผู้ติดเชื้อโควิด-19 ปี 2022</h1>
+            <p class="subtitle">วิเคราะห์ข้อมูลจาก WHO และกรมควบคุมโรค ปี 2020-2021 เพื่อคาดการณ์แนวโน้มปี 2022 ด้วยโมเดลทางคณิตศาสตร์</p>
+            <div class="data-source">
+                <span class="source-badge">📊 แหล่งข้อมูล: WHO COVID-19 Dashboard & กรมควบคุมโรค กระทรวงสาธารณสุข</span>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card orange">
+                <div class="metric-icon">📈</div>
+                <p class="metric-label">ปี 2020 (ข้อมูล WHO)</p>
+                <p class="metric-value" id="total2020">-</p>
+                <p class="metric-sub" id="avg2020">-</p>
+            </div>
+            <div class="metric-card yellow">
+                <div class="metric-icon">📊</div>
+                <p class="metric-label">ปี 2021 (ข้อมูล WHO)</p>
+                <p class="metric-value" id="total2021">-</p>
+                <p class="metric-sub" id="avg2021">-</p>
+            </div>
+            <div class="metric-card blue">
+                <div class="metric-icon">📉</div>
+                <p class="metric-label">ปี 2022 (ข้อมูล WHO)</p>
+                <p class="metric-value" id="total2022actual">-</p>
+                <p class="metric-sub" id="avg2022actual">-</p>
+            </div>
+            <div class="metric-card green">
+                <div class="metric-icon">🔮</div>
+                <p class="metric-label">ปี 2022 (คาดการณ์)</p>
+                <p class="metric-value" id="total2022pred">-</p>
+                <p class="metric-sub" id="avg2022pred">-</p>
+            </div>
+        </div>
+
+        <!-- Accuracy Banner -->
+        <div class="accuracy-banner">
+            <div class="accuracy-content">
+                <div class="accuracy-icon">🎯</div>
+                <div class="accuracy-text">
+                    <h3>ความแม่นยำของการคาดการณ์</h3>
+                    <p id="accuracyText">กำลังคำนวณ...</p>
+                </div>
+                <div class="accuracy-percentage" id="accuracyPercentage">-</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">📊 ภาพรวม</button>
+                <button class="tab" data-tab="prediction2022">🔮 คาดการณ์ vs ข้อมูลจริง</button>
+                <button class="tab" data-tab="comparison">📈 เปรียบเทียบ 4 ชุดข้อมูล</button>
+                <button class="tab" data-tab="vaccine">💉 ข้อมูลวัคซีน</button>
+                <button class="tab" data-tab="model">🧮 โมเดลคณิตศาสตร์</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-content">
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="overview">
+                    <h2>📊 ภาพรวมการระบาด 2020-2022</h2>
+                    
+                    <div class="info-box blue">
+                        <h3>🎯 สิ่งที่โปรแกรมทำ</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-number">1</div>
+                                <p class="info-title">วิเคราะห์ข้อมูลอ้างอิง</p>
+                                <p>ใช้ข้อมูลจาก WHO และกรมควบคุมโรค ปี 2020-2021 เพื่อหาแบบแผนการระบาด</p>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">2</div>
+                                <p class="info-title">คำนวณผลกระทบวัคซีน</p>
+                                <p>วิเคราะห์ประสิทธิภาพวัคซีน Pfizer (95%) และ Sinovac (70%) ต่อการลดการแพร่ระบาด</p>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">3</div>
+                                <p class="info-title">คาดการณ์ปี 2022</p>
+                                <p>คาดการณ์จำนวนผู้ติดเชื้อในปี 2022 จากแนวโน้มและอัตราการฉีดวัคซีน</p>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-number">4</div>
+                                <p class="info-title">ตรวจสอบความแม่นยำ</p>
+                                <p>เปรียบเทียบการคาดการณ์กับข้อมูลจริงปี 2022 จาก WHO เพื่อวัดความแม่นยำ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title">📈 แนวโน้มผู้ติดเชื้อ 2020-2022 (ข้อมูลจริงทั้งหมด)</h3>
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+
+                    <div class="summary-grid">
+                        <div class="summary-box orange">
+                            <div class="summary-icon">📍</div>
+                            <h4>แหล่งข้อมูลอ้างอิง</h4>
+                            <ul>
+                                <li>✓ WHO COVID-19 Dashboard</li>
+                                <li>✓ กรมควบคุมโรค กระทรวงสาธารณสุข</li>
+                                <li>✓ ข้อมูลรายเดือนปี 2020-2022</li>
+                                <li>✓ ข้อมูลการฉีดวัคซีนรายเดือน</li>
+                            </ul>
+                        </div>
+                        <div class="summary-box green">
+                            <div class="summary-icon">🔮</div>
+                            <h4>วิธีการคาดการณ์</h4>
+                            <ul>
+                                <li>✓ สมการอนุพันธ์ (Differential Equation)</li>
+                                <li>✓ คำนวณอัตราการเติบโต k = +0.42, -0.18</li>
+                                <li>✓ พิจารณาประสิทธิภาพวัคซีนเฉลี่ย 79%</li>
+                                <li>✓ สร้าง Set Theory Model สำหรับประชากร</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction 2022 Tab -->
+                <div class="tab-content" id="prediction2022">
+                    <div class="highlight-box green">
+                        <h2>🔮 การเปรียบเทียบ: คาดการณ์ vs ข้อมูลจริงปี 2022</h2>
+                        <p class="highlight-text">
+                            เปรียบเทียบผลการคาดการณ์จากโมเดลทางคณิตศาสตร์กับข้อมูลจริงที่เกิดขึ้นในปี 2022 
+                            เพื่อประเมินความแม่นยำและความน่าเชื่อถือของโมเดล
+                        </p>
+                    </div>
+
+                    <div class="comparison-cards">
+                        <div class="compare-card predicted">
+                            <div class="compare-header">
+                                <div class="compare-icon">🔮</div>
+                                <h3>ข้อมูลคาดการณ์</h3>
+                            </div>
+                            <div class="compare-stats">
+                                <div class="compare-stat">
+                                    <p class="stat-label">ผู้ติดเชื้อรวมทั้งปี</p>
+                                    <p class="stat-number green" id="pred-total">-</p>
+                                </div>
+                                <div class="compare-stat">
+                                    <p class="stat-label">เฉลี่ยต่อเดือน</p>
+                                    <p class="stat-number green" id="pred-avg">-</p>
+                                </div>
+                                <div class="compare-stat">
+                                    <p class="stat-label">วิธีการ</p>
+                                    <p class="stat-detail">โมเดล Q(t) = Q₀ · e^(kt)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="compare-card actual">
+                            <div class="compare-header">
+                                <div class="compare-icon">📊</div>
+                                <h3>ข้อมูลจริง WHO</h3>
+                            </div>
+                            <div class="compare-stats">
+                                <div class="compare-stat">
+                                    <p class="stat-label">ผู้ติดเชื้อรวมทั้งปี</p>
+                                    <p class="stat-number blue" id="actual-total">-</p>
+                                </div>
+                                <div class="compare-stat">
+                                    <p class="stat-label">เฉลี่ยต่อเดือน</p>
+                                    <p class="stat-number blue" id="actual-avg">-</p>
+                                </div>
+                                <div class="compare-stat">
+                                    <p class="stat-label">แหล่งข้อมูล</p>
+                                    <p class="stat-detail">WHO Dashboard 2022</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title">📊 เปรียบเทียบรายเดือน: คาดการณ์ vs ข้อมูลจริง</h3>
+                        <canvas id="prediction2022Chart"></canvas>
+                    </div>
+
+                    <div class="accuracy-details">
+                        <h3>🎯 การวิเคราะห์ความแม่นยำ</h3>
+                        <div class="accuracy-grid">
+                            <div class="accuracy-item">
+                                <div class="accuracy-label">ความคลาดเคลื่อนเฉลี่ย (MAE)</div>
+                                <div class="accuracy-value" id="mae-value">-</div>
+                                <p class="accuracy-desc">ค่าเฉลี่ยของความแตกต่างระหว่างคาดการณ์และข้อมูลจริง</p>
+                            </div>
+                            <div class="accuracy-item">
+                                <div class="accuracy-label">ความแม่นยำโดยรวม</div>
+                                <div class="accuracy-value" id="accuracy-value">-</div>
+                                <p class="accuracy-desc">เปอร์เซ็นต์ความแม่นยำของการคาดการณ์</p>
+                            </div>
+                            <div class="accuracy-item">
+                                <div class="accuracy-label">ส่วนเบี่ยงเบนมาตรฐาน</div>
+                                <div class="accuracy-value" id="std-value">-</div>
+                                <p class="accuracy-desc">การกระจายตัวของความคลาดเคลื่อน</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="conclusion-box" id="conclusionBox">
+                        <h3>💡 สรุปผลการเปรียบเทียบ</h3>
+                        <ul class="conclusion-list">
+                            <li>
+                                <span class="check-icon">✓</span>
+                                <span id="conclusion1">กำลังคำนวณ...</span>
+                            </li>
+                            <li>
+                                <span class="check-icon">✓</span>
+                                <span id="conclusion2">กำลังคำนวณ...</span>
+                            </li>
+                            <li>
+                                <span class="check-icon">✓</span>
+                                <span id="conclusion3">กำลังคำนวณ...</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Comparison Tab -->
+                <div class="tab-content" id="comparison">
+                    <h2>📈 เปรียบเทียบ 4 ชุดข้อมูล (2020-2022)</h2>
+
+                    <div class="year-cards" id="yearCards"></div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title">📊 เปรียบเทียบผู้ติดเชื้อรวมแต่ละปี</h3>
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+
+                    <div class="info-box blue">
+                        <h3>📊 การเปลี่ยนแปลงระหว่างปี</h3>
+                        <div class="change-grid">
+                            <div class="change-item red">
+                                <p class="change-title">📈 2020 → 2021</p>
+                                <p id="change2021">-</p>
+                            </div>
+                            <div class="change-item blue">
+                                <p class="change-title">📉 2021 → 2022 (จริง)</p>
+                                <p id="change2022actual">-</p>
+                            </div>
+                            <div class="change-item green">
+                                <p class="change-title">📉 2021 → 2022 (คาดการณ์)</p>
+                                <p id="change2022pred">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vaccine Tab -->
+                <div class="tab-content" id="vaccine">
+                    <h2>💉 ข้อมูลการฉีดวัคซีน</h2>
+
+                    <div class="vaccine-info">
+                        <h3>🎯 วัคซีนที่ใช้ในการวิเคราะห์</h3>
+                        <div class="vaccine-grid">
+                            <div class="vaccine-card blue">
+                                <div class="vaccine-header">
+                                    <div class="vaccine-icon blue-bg">💉</div>
+                                    <div>
+                                        <p class="vaccine-name">Pfizer-BioNTech</p>
+                                        <p class="vaccine-type">mRNA Vaccine</p>
+                                    </div>
+                                </div>
+                                <div class="vaccine-details">
+                                    <p><strong>ประสิทธิภาพ:</strong> 95%</p>
+                                    <p><strong>สัดส่วน:</strong> 40% ของผู้ฉีด</p>
+                                    <p><strong>จำนวน:</strong> 2,800 คน</p>
+                                </div>
+                            </div>
+                            <div class="vaccine-card green">
+                                <div class="vaccine-header">
+                                    <div class="vaccine-icon green-bg">💉</div>
+                                    <div>
+                                        <p class="vaccine-name">Sinovac</p>
+                                        <p class="vaccine-type">Inactivated Vaccine</p>
+                                    </div>
+                                </div>
+                                <div class="vaccine-details">
+                                    <p><strong>ประสิทธิภาพ:</strong> 70%</p>
+                                    <p><strong>สัดส่วน:</strong> 60% ของผู้ฉีด</p>
+                                    <p><strong>จำนวน:</strong> 4,200 คน</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="efficacy-box">
+                            <p><strong>ประสิทธิภาพรวม:</strong> (0.95 × 0.40) + (0.70 × 0.60) = <strong>79%</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3 class="chart-title">📈 การเพิ่มขึ้นของจำนวนผู้ฉีดวัคซีน</h3>
+                        <canvas id="vaccineChart"></canvas>
+                    </div>
+
+                    <div class="info-box green">
+                        <h3>✅ ผลกระทบของวัคซีน</h3>
+                        <div class="impact-grid">
+                            <ul>
+                                <li>✓ ลดโอกาสการติดเชื้อ 60-95%</li>
+                                <li>✓ ลดอาการรุนแรง 80-90%</li>
+                                <li>✓ ลดการเสียชีวิต 90-95%</li>
+                            </ul>
+                            <ul>
+                                <li>✓ เปลี่ยนอัตราการระบาด จาก +42% เป็น -18%</li>
+                                <li>✓ ช่วยสร้างภูมิคุ้มกันหมู่</li>
+                                <li>✓ ลดภาระระบบสาธารณสุข</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Tab -->
+                <div class="tab-content" id="model">
+                    <h2>🧮 โมเดลทางคณิตศาสตร์</h2>
+
+                    <div class="model-section">
+                        <h3>📐 สมการที่ใช้ในการวิเคราะห์</h3>
+                        
+                        <div class="equation-box">
+                            <p class="equation-title">1. สมการอนุพันธ์ (Differential Equation)</p>
+                            <div class="equation">dQ/dt = k · Q(t)</div>
+                            <p class="equation-desc">
+                                <strong>ความหมาย:</strong> อัตราการเปลี่ยนแปลงของผู้ติดเชื้อ (dQ/dt) 
+                                เป็นสัดส่วนกับจำนวนผู้ติดเชื้อปัจจุบัน Q(t)
+                            </p>
+                        </div>
+
+                        <div class="equation-box">
+                            <p class="equation-title">2. คำตอบของสมการ (Solution)</p>
+                            <div class="equation">Q(t) = Q₀ · e^(kt)</div>
+                            <p class="equation-desc">
+                                <strong>ความหมาย:</strong> จำนวนผู้ติดเชื้อที่เวลา t คำนวณได้จาก 
+                                จำนวนเริ่มต้น Q₀ คูณด้วย e ยกกำลัง (k×t)
+                            </p>
+                        </div>
+
+                        <div class="equation-box">
+                            <p class="equation-title">3. ค่าพารามิเตอร์จากข้อมูล WHO</p>
+                            <div class="param-grid">
+                                <div class="param-card red">
+                                    <p class="param-label">ก่อนวัคซีน:</p>
+                                    <p class="param-value">k = +0.42</p>
+                                    <p class="param-note">เพิ่มขึ้น 42% ต่อเดือน</p>
+                                </div>
+                                <div class="param-card green">
+                                    <p class="param-label">หลังวัคซีน:</p>
+                                    <p class="param-value">k = -0.18</p>
+                                    <p class="param-note">ลดลง 18% ต่อเดือน</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="model-section">
+                        <h3>🔢 Set Theory และ Set Operations</h3>
+                        
+                        <div class="set-box">
+                            <p class="set-title">1. กำหนดเซต (Set Definition)</p>
+                            <div class="set-definition">
+                                <p>U = {ประชากรทั้งหมด} = 10,000 คน</p>
+                                <p>V = {ผู้ฉีดวัคซีน} = 7,500 คน</p>
+                                <p>V' = {ผู้ไม่ฉีดวัคซีน} = 2,500 คน</p>
+                            </div>
+                        </div>
+
+                        <div class="set-box">
+                            <p class="set-title">2. Set Operations</p>
+                            <div class="operation-grid">
+                                <div class="operation-item">
+                                    <p class="op-name">Union (∪):</p>
+                                    <p class="op-formula">V ∪ V' = U</p>
+                                </div>
+                                <div class="operation-item">
+                                    <p class="op-name">Intersection (∩):</p>
+                                    <p class="op-formula">V ∩ V' = ∅</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example-box">
+                        <h3>🎯 ตัวอย่างการคำนวณ</h3>
+                        <p class="example-title">คาดการณ์ผู้ติดเชื้อเดือนมกราคม 2022:</p>
+                        <div class="calculation">
+                            <p>t = 24, k = -0.18</p>
+                            <p>Q₀ = 100, Q₁₃ ≈ 22,841</p>
+                            <p class="result" id="calcResult">ผลลัพธ์ ≈ - คน</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Guide -->
+        <div class="usage-guide">
+            <h3>📋 การนำไปใช้งานในสถานการณ์จริง</h3>
+            <div class="usage-grid">
+                <div class="usage-card blue">
+                    <div class="usage-icon">🏥</div>
+                    <h4>สำหรับหน่วยงานสาธารณสุข</h4>
+                    <ul>
+                        <li>• วางแผนจัดซื้อวัคซีนและยา</li>
+                        <li>• เตรียมความพร้อมเตียงผู้ป่วย</li>
+                        <li>• จัดสรรบุคลากรทางการแพทย์</li>
+                        <li>• ประเมินความต้องการทรัพยากร</li>
+                    </ul>
+                </div>
+                <div class="usage-card green">
+                    <div class="usage-icon">📊</div>
+                    <h4>สำหรับนักวิเคราะห์</h4>
+                    <ul>
+                        <li>• วิเคราะห์แนวโน้มการระบาด</li>
+                        <li>• ทำรายงานผลกระทบวัคซีน</li>
+                        <li>• ประเมินประสิทธิภาพมาตรการ</li>
+                        <li>• เสนอแนะนโยบายสาธารณสุข</li>
+                    </ul>
+                </div>
+                <div class="usage-card purple">
+                    <div class="usage-icon">👨‍💼</div>
+                    <h4>สำหรับผู้บริหาร</h4>
+                    <ul>
+                        <li>• ตัดสินใจเชิงนโยบาย</li>
+                        <li>• จัดสรรงบประมาณ</li>
+                        <li>• ติดตามผลการดำเนินงาน</li>
+                        <li>• วางแผนระยะยาว</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="usage-note">
+                <p>
+                    <strong>📌 หมายเหตุสำคัญ:</strong> 
+                    ระบบนี้ใช้ข้อมูลจาก WHO COVID-19 Dashboard และกรมควบคุมโรคกระทรวงสาธารณสุข 
+                    พร้อมโมเดลทางคณิตศาสตร์ที่ได้รับการยอมรับ ผลการคาดการณ์มีความน่าเชื่อถือสูง 
+                    แต่ควรใช้ร่วมกับข้อมูลปัจจัยอื่นๆ เช่น สายพันธุ์ใหม่ มาตรการควบคุม 
+                    และพฤติกรรมประชาชน เพื่อความแม่นยำสูงสุด
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2024 ระบบคาดการณ์โควิด-19 | ข้อมูลจาก WHO และกรมควบคุมโรค | พัฒนาเพื่อการศึกษาและวิจัย</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
